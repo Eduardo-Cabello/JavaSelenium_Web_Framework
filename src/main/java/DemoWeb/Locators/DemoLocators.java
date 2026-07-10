@@ -19,4 +19,7 @@ public class DemoLocators {
 
     @FindBy (id = "signInBtn")
     public WebElement btnsignin;
+
+    @FindBy(xpath = "//div[contains(@class, 'alert-danger')]")
+    public WebElement SingInError;
 }

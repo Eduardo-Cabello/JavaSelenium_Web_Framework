@@ -27,7 +27,22 @@ public class DemoActions extends Base {
         click(dl.chekterms);
     }
 
+    public void fillIncorrectLoginData(){
+        String pass = Utilities.getProperties("password");
+        String role = Utilities.getProperties("role");
+
+        type(dl.txtusername,"asddc");
+        type(dl.txtpassword,pass);
+        select(dl.lstform,role);
+        click(dl.chekterms);
+    }
+
     public void click_SingInBtn(){click(dl.btnsignin);}
 
+    public String getLoginError(){
+      String attribute = getAttribute(dl.SingInError,"textContent");
+      System.out.println(attribute);
+      return attribute;
+    }
 
 }

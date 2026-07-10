@@ -205,6 +205,11 @@ public class Base {
         return element.getText();
     }
 
+    public static String getAttribute(WebElement element, String attribute){
+        waitElementVisible(element);
+        return element.getAttribute(attribute);
+    }
+
     public static void switchToFrame(By locator) {
         try {
             driver.switchTo().defaultContent();
