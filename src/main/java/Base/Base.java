@@ -3,13 +3,11 @@ package Base;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.edge.EdgeDriver;
-import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import javax.swing.*;
-import java.time.Duration;
 
 public class Base {
 
@@ -148,7 +146,7 @@ public class Base {
             String[] options = {"Continue","Repeat","Finish"};
             int opt = JOptionPane.showOptionDialog(
                     null,
-                    "Element no selectable: " + element.toString(),
+                    "Element no findable: " + element.toString(),
                     "Error",
                     JOptionPane.DEFAULT_OPTION,
                     JOptionPane.ERROR_MESSAGE,
@@ -169,6 +167,36 @@ public class Base {
                 System.exit(0);
             }
 
+        }
+    }
+
+    public static void clear(WebElement element){
+        try {
+            waitElementVisible(element);
+            element.clear();
+        }catch (Exception e){
+            String[] options = {"Continue","Repeat","Finish"};
+            int opt = JOptionPane.showOptionDialog(
+                    null,
+                    "Element no findable: " + element.toString(),
+                    "Error",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.ERROR_MESSAGE,
+                    null,
+                    options,
+                    0
+            );
+            if (opt == 0) {
+                System.out.println("Continue Test");
+            }else if (opt == 1){
+                element.clear();
+            }else {
+                System.out.println("Test stopped at element: " + element.toString());
+                if (driver != null) {
+                    driver.quit();
+                }
+                System.exit(0);
+            }
         }
     }
 
