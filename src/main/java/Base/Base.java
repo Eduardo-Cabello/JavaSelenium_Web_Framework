@@ -8,6 +8,7 @@ import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import javax.swing.*;
+import java.time.Duration;
 
 public class Base {
 
@@ -24,6 +25,7 @@ public class Base {
             } else {
                 throw new IllegalArgumentException("Incorrect browser name, options: 'chrome', 'edge'");
             }
+            wait = new WebDriverWait(driver, Duration.ofSeconds(implicitWait));
             driver.manage().window().maximize();
         } catch (Exception e) {
             System.err.println("Error al iniciar el driver: " + e.getMessage());
@@ -32,6 +34,9 @@ public class Base {
     }
 
     public static void navigate(){
+        if (driver == null) {
+            throw new IllegalStateException("WebDriver is not initialized.");
+        }
         driver.get(Utilities.getProperties("url"));
     }
 
