@@ -32,15 +32,35 @@ public class Utilities extends Base {
     private static final List<StepRecord> STEP_LOG = new ArrayList<>();
     private static final DateTimeFormatter TIMESTAMP_FORMATTER =
             DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+    // Controls whether screenshots are captured for steps. Can be set by tests at runtime.
+    private static boolean EVIDENCE_ENABLED = true;
+    // Cache properties to avoid reading the file for every lookup.
+    private static final java.util.Properties CACHED_PROPS = loadProperties();
 
     public static String getProperties(String key) {
-        Properties prop = new Properties();
-        try (FileInputStream fis = new FileInputStream("src/test/resources/data.properties")) {
+        if (key == null) return null;
+        // 1) System properties override
+        String sys = System.getProperty(key);
+        if (sys != null) return sys;
+
+        // 2) Environment variables override (dots -> underscores, uppercased)
+        String envKey = key.toUpperCase().replace('.', '_');
+        String env = System.getenv(envKey);
+        if (env != null) return env;
+
+        // 3) Fallback to cached properties file
+        return CACHED_PROPS.getProperty(key);
+    }
+
+    private static java.util.Properties loadProperties() {
+        java.util.Properties prop = new java.util.Properties();
+        Path propsPath = Paths.get("src", "test", "resources", "data.properties");
+        try (FileInputStream fis = new FileInputStream(propsPath.toFile())) {
             prop.load(fis);
         } catch (IOException e) {
             System.out.println("Unable to read properties file: " + e.getMessage());
         }
-        return prop.getProperty(key);
+        return prop;
     }
 
     // Clear the step log before each test execution.
@@ -50,6 +70,13 @@ public class Utilities extends Base {
 
     // Capture a screenshot for each test step and store the expected vs actual result.
     public static void captureStepScreenshot(String stepName, String expectedResult, String actualResult) {
+        // If evidence generation is disabled, do not capture screenshots but still record the step.
+        if (!EVIDENCE_ENABLED) {
+            STEP_LOG.add(new StepRecord(stepName, expectedResult, actualResult, null));
+            System.out.println("Evidence disabled - skipping screenshot for step: " + stepName);
+            return;
+        }
+
         String safeStepName = stepName == null ? "step" : stepName.replaceAll("[^a-zA-Z0-9._-]", "_");
         String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMATTER);
         Path screenshotPath = Paths.get("target", "reports", "screenshots", safeStepName + "_" + timestamp + ".png");
@@ -77,6 +104,14 @@ public class Utilities extends Base {
         }
 
         STEP_LOG.add(new StepRecord(stepName, expectedResult, actualResult, screenshotPath.toString()));
+    }
+
+    public static void setEvidenceEnabled(boolean enabled) {
+        EVIDENCE_ENABLED = enabled;
+    }
+
+    public static boolean isEvidenceEnabled() {
+        return EVIDENCE_ENABLED;
     }
 
     // Generate a Word document containing the execution summary and screenshots for each step.

@@ -145,7 +145,11 @@ public class Base {
         try {
             waitElementVisible(element);
             element.clear();
-            wait.wait(500);
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
             element.sendKeys(value);
         } catch (Exception e) {
             String[] options = {"Continue","Repeat","Finish"};

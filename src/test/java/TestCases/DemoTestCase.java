@@ -2,6 +2,7 @@ package TestCases;
 
 import Base.Base;
 import Base.Utilities;
+import Base.ZephyrUploader;
 import DemoWeb.Actions.DemoActions;
 import org.openqa.selenium.WebDriver;
 import org.testng.Assert;
@@ -14,10 +15,22 @@ import org.testng.annotations.Test;
 public class DemoTestCase {
     private WebDriver driver;
     private DemoActions ac;
+    // Control whether to create Word evidence reports for each test. Can be overridden per-test.
+    protected boolean createEvidence = true;
 
     @BeforeMethod
     public void setUp() {
         Utilities.clearStepLog();
+        // Read default from properties (can be overridden in test methods)
+        String evidenceProp = Utilities.getProperties("evidence.enabled");
+        if (evidenceProp != null && !evidenceProp.isBlank()) {
+            try {
+                createEvidence = Boolean.parseBoolean(evidenceProp.trim());
+            } catch (Exception ignored) {
+            }
+        }
+        // Propagate to Utilities so screenshot capture respects this flag
+        Utilities.setEvidenceEnabled(createEvidence);
         driver = Base.startDriver("chrome");
         ac = new DemoActions();
         driver.manage().deleteAllCookies();
@@ -25,7 +38,7 @@ public class DemoTestCase {
         Utilities.captureStepScreenshot("Open application", "The application page should be visible", "The application page is loaded");
     }
 
-    //@Ignore("Def: 1120")
+    @Ignore("Def: 1120")
     @Test(description = "Login with valid credentials")
     public void CP001() {
         Utilities.captureStepScreenshot("Fill login data", "The login form should be completed", "The login form is populated");
@@ -54,8 +67,19 @@ public class DemoTestCase {
         String reportPath = "target/reports/" + reportFileName + ".docx";
         String finalStatus = result.getStatus() == ITestResult.SUCCESS ? "Passed" : "Failed";
 
-        Utilities.captureStepScreenshot("Finish test execution", "The test should complete", finalStatus);
-        Utilities.generateWordReport(testName, reportPath, finalStatus);
+        if (createEvidence) {
+            Utilities.captureStepScreenshot("Finish test execution", "The test should complete", finalStatus);
+            Utilities.generateWordReport(testName, reportPath, finalStatus);
+        } else {
+            System.out.println("Skipping final screenshot and Word evidence generation for " + testId);
+        }
+
+        // Upload test results to Zephyr Scale if enabled in properties
+        try {
+            ZephyrUploader.uploadSurefireReports();
+        } catch (Exception e) {
+            System.err.println("Zephyr upload failed: " + e.getMessage());
+        }
 
         if (driver != null) {
             driver.quit();

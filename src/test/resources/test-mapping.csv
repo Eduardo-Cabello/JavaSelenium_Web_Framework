@@ -1,0 +1,4 @@
+## Mapping of test identifiers to Jira Test keys
+# Format: fully.qualified.ClassName#methodName,JIRA-KEY
+# Example:
+# TestCases.DemoTestCase#CP002,PROJ-123
