@@ -2,45 +2,35 @@ package DemoWeb.Actions;
 
 
 import Base.Base;
-import Base.Utilities;
-import DemoWeb.Locators.DemoLocators;
-import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.pagefactory.AjaxElementLocatorFactory;
+import Base.ConfigManager;
+import DemoWeb.Pages.LoginPage;
 
 public class DemoActions extends Base {
-    protected DemoLocators dl;
+    private final LoginPage loginPage;
 
     public DemoActions(){
-        dl= new DemoLocators();
-        AjaxElementLocatorFactory factory = new AjaxElementLocatorFactory(driver , implicitWait);
-        PageFactory.initElements(factory,dl);
+        loginPage = new LoginPage();
     }
 
     public void fillLoginData(){
-        String user = Utilities.getProperties("username");
-        String pass = Utilities.getProperties("password");
-        String role = Utilities.getProperties("role");
+        String user = ConfigManager.getString("username", "");
+        String pass = ConfigManager.getString("password", "");
+        String role = ConfigManager.getString("role", "");
 
-        type(dl.txtusername,user);
-        type(dl.txtpassword,pass);
-        select(dl.lstform,role);
-        click(dl.chekterms);
+        loginPage.loginWithCredentials(user, pass, role);
     }
 
     public void fillIncorrectLoginData(){
-        String pass = Utilities.getProperties("password");
-        String role = Utilities.getProperties("role");
+        String pass = ConfigManager.getString("password", "");
+        String role = ConfigManager.getString("role", "");
 
-        type(dl.txtusername,"asddc");
-        type(dl.txtpassword,pass);
-        select(dl.lstform,role);
-        click(dl.chekterms);
+        loginPage.loginWithCredentials("asddc", pass, role);
     }
 
-    public void click_SingInBtn(){click(dl.btnsignin);}
+    public void click_SingInBtn(){loginPage.submit();}
 
     public String getLoginError(){
-      String attribute = getAttribute(dl.SingInError,"textContent");
+      String attribute = loginPage.getErrorText();
       System.out.println(attribute);
       return attribute;
     }

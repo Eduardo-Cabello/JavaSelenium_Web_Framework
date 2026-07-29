@@ -7,6 +7,7 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -25,8 +26,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
-
 public class Utilities extends Base {
 
     private static final List<StepRecord> STEP_LOG = new ArrayList<>();
@@ -34,33 +33,8 @@ public class Utilities extends Base {
             DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
     // Controls whether screenshots are captured for steps. Can be set by tests at runtime.
     private static boolean EVIDENCE_ENABLED = true;
-    // Cache properties to avoid reading the file for every lookup.
-    private static final java.util.Properties CACHED_PROPS = loadProperties();
-
     public static String getProperties(String key) {
-        if (key == null) return null;
-        // 1) System properties override
-        String sys = System.getProperty(key);
-        if (sys != null) return sys;
-
-        // 2) Environment variables override (dots -> underscores, uppercased)
-        String envKey = key.toUpperCase().replace('.', '_');
-        String env = System.getenv(envKey);
-        if (env != null) return env;
-
-        // 3) Fallback to cached properties file
-        return CACHED_PROPS.getProperty(key);
-    }
-
-    private static java.util.Properties loadProperties() {
-        java.util.Properties prop = new java.util.Properties();
-        Path propsPath = Paths.get("src", "test", "resources", "data.properties");
-        try (FileInputStream fis = new FileInputStream(propsPath.toFile())) {
-            prop.load(fis);
-        } catch (IOException e) {
-            System.out.println("Unable to read properties file: " + e.getMessage());
-        }
-        return prop;
+        return ConfigManager.getString(key, null);
     }
 
     // Clear the step log before each test execution.
@@ -88,8 +62,9 @@ public class Utilities extends Base {
         }
 
         try {
-            if (driver != null && driver instanceof TakesScreenshot) {
-                java.io.File screenshotFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+            WebDriver currentDriver = Base.getDriverOrNull();
+            if (currentDriver != null && currentDriver instanceof TakesScreenshot) {
+                java.io.File screenshotFile = ((TakesScreenshot) currentDriver).getScreenshotAs(OutputType.FILE);
                 Files.copy(screenshotFile.toPath(), screenshotPath, StandardCopyOption.REPLACE_EXISTING);
             } else {
                 createPlaceholderScreenshot(screenshotPath);

@@ -12,41 +12,36 @@ import java.time.Duration;
 
 public class Base {
 
-    public static WebDriver driver;
-    public static WebDriverWait wait;
-    public static int implicitWait = 6;
+    private static WebDriver driver;
+    private static WebDriverWait wait;
+    public static int implicitWait = ConfigManager.getInt("implicit.timeout", 6);
 
-    public static WebDriver startDriver(String nav) {
-        try {
-            if (nav.equalsIgnoreCase("chrome")){
-                driver = new ChromeDriver();
-            } else if (nav.equalsIgnoreCase("edge")){
-                driver = new EdgeDriver();
-            } else {
-                throw new IllegalArgumentException("Incorrect browser name, options: 'chrome', 'edge'");
-            }
-            wait = new WebDriverWait(driver, Duration.ofSeconds(implicitWait));
-            driver.manage().window().maximize();
-        } catch (Exception e) {
-            System.err.println("Error al iniciar el driver: " + e.getMessage());
+    public static void setDriver(WebDriver webDriver) {
+        driver = webDriver;
+        wait = new WebDriverWait(driver, Duration.ofSeconds(implicitWait));
+    }
+
+    public static WebDriver getDriver() {
+        if (driver == null) {
+            throw new IllegalStateException("WebDriver is not initialized.");
         }
         return driver;
     }
 
+    public static WebDriver getDriverOrNull() {
+        return driver;
+    }
+
     public static void navigate(){
-        if (driver == null) {
-            throw new IllegalStateException("WebDriver is not initialized.");
-        }
-        driver.get(Utilities.getProperties("url"));
+        WebDriver currentDriver = getDriver();
+        currentDriver.get(ConfigManager.getString("url", ""));
     }
 
     public static void waitElementVisible(WebElement element){
         try {
-            System.out.println("Waiting to element visible.."+ element.toString());
             wait.until(ExpectedConditions.visibilityOf(element));
-            System.out.println("Element visible");
         } catch (Exception e){
-            System.out.println("Element no visible"+element.toString());
+            throw new IllegalStateException("Element not visible: " + element, e);
         }
     }
 
